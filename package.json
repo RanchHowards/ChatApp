@@ -1,0 +1,31 @@
+{
+  "name": "chatapp",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@graphql-tools/schema": "^7.1.5",
+    "apollo-server-express": "3.1.2",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "graphql": "^15.5.1",
+    "graphql-subscriptions": "^1.2.1",
+    "mongoose": "^6.0.13",
+    "nodemon": "^2.0.12",
+    "subscriptions-transport-ws": "^0.9.19"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RanchHowards/ChatApp.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/RanchHowards/ChatApp/issues"
+  },
+  "homepage": "https://github.com/RanchHowards/ChatApp#readme"
+}
