@@ -2,7 +2,8 @@ const mongoose = require('mongoose')
 
 const schema = new mongoose.Schema(
   {
-    messages: [{ message: String, author: String }],
+    name: String,
+    messages: [{ message: String, author: String, chatID: String }],
   },
   { timestamps: true }
 )

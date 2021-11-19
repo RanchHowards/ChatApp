@@ -2,7 +2,7 @@ const { createServer } = require('http')
 const express = require('express')
 const { execute, subscribe } = require('graphql')
 const { ApolloServer, gql } = require('apollo-server-express')
-const { PubSub } = require('graphql-subscriptions')
+const { PubSub, withFilter } = require('graphql-subscriptions')
 const { SubscriptionServer } = require('subscriptions-transport-ws')
 const { makeExecutableSchema } = require('@graphql-tools/schema')
 const mongoose = require('mongoose')
@@ -47,34 +47,40 @@ const Chat = require('./models/chat.js')
     type Message {
       message: String
       author: String
+      id: ID
+      chatID: ID
     }
     type Chat {
+      name: String
       messages: [Message]
       id: ID
     }
     type Query {
       chats: [Chat]
+      findChat(id: ID): Chat
     }
     type Mutation {
       addMessage(message: String, author: String, chatID: ID): Message
-      createChat: Chat
+      createChat(name: String): Chat
+    }
+    type Subscription {
+      messageAdded: Message
     }
   `
-  //  type Subscription {
-  //   numberIncremented: Int
-  // }
-
   // Resolver map
   const resolvers = {
     Query: {
       chats: async () => {
         return Chat.find({})
       },
+      findChat: async (root, { id }) => {
+        return await Chat.findById(id)
+      },
     },
     Mutation: {
-      createChat: async () => {
+      createChat: async (root, { name }) => {
         try {
-          const newChat = new Chat({})
+          const newChat = new Chat({ name })
           await newChat.save()
           return newChat
         } catch (err) {
@@ -82,27 +88,45 @@ const Chat = require('./models/chat.js')
         }
       },
       addMessage: async (root, { message, author, chatID }) => {
+        const newMessage = { message, author, chatID }
         try {
           const chat = await Chat.findById(chatID)
-          chat.messages.push({ message, author })
+          chat.messages.push(newMessage)
           await chat.save()
+          //subscription, adding whole chat right now but probably should just add new message
+          pubsub.publish('MESSAGE_ADDED', { messageAdded: newMessage })
+
           return chat
         } catch (err) {
           console.log('CREATE CHAT', err)
         }
       },
     },
-    // Subscription: {
-    //   numberIncremented: {
-    //     subscribe: () => pubsub.asyncIterator(['NUMBER_INCREMENTED']),
-    //   },
-    // },
+    Subscription: {
+      messageAdded: {
+        subscribe: () => pubsub.asyncIterator(['MESSAGE_ADDED']),
+        // (payload,variables)=>{
+        //   return (payload.messageAdded. === variables.repoFullName);
+        // })
+      },
+    },
   }
 
   const schema = makeExecutableSchema({ typeDefs, resolvers })
 
   const server = new ApolloServer({
     schema,
+    plugins: [
+      {
+        async serverWillStart() {
+          return {
+            async drainServer() {
+              subscriptionServer.close()
+            },
+          }
+        },
+      },
+    ],
   })
   await server.start()
   server.applyMiddleware({ app })
@@ -120,10 +144,4 @@ const Chat = require('./models/chat.js')
       `🚀 Subscription endpoint ready at ws://localhost:${PORT}${server.graphqlPath}`
     )
   })
-
-  // function incrementNumber() {
-  //   currentNumber++
-  //   pubsub.publish('NUMBER_INCREMENTED', { numberIncremented: currentNumber })
-  //   setTimeout(incrementNumber, 1000)
-  // }
 })()
