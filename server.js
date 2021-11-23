@@ -64,7 +64,7 @@ const Chat = require('./models/chat.js')
       createChat(name: String): Chat
     }
     type Subscription {
-      messageAdded: Message
+      messageAdded(chatID: ID): Message
     }
   `
   // Resolver map
@@ -104,10 +104,12 @@ const Chat = require('./models/chat.js')
     },
     Subscription: {
       messageAdded: {
-        subscribe: () => pubsub.asyncIterator(['MESSAGE_ADDED']),
-        // (payload,variables)=>{
-        //   return (payload.messageAdded. === variables.repoFullName);
-        // })
+        subscribe: withFilter(
+          () => pubsub.asyncIterator(['MESSAGE_ADDED']),
+          (payload, variables) => {
+            return payload.messageAdded.chatID === variables.chatID
+          }
+        ),
       },
     },
   }
