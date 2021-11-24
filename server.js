@@ -61,6 +61,7 @@ const Chat = require('./models/chat.js')
     }
     type Mutation {
       addMessage(message: String, author: String, chatID: ID): Message
+      deleteChat(chatID: ID): Chat
       createChat(name: String): Chat
     }
     type Subscription {
@@ -87,6 +88,15 @@ const Chat = require('./models/chat.js')
           console.log('CREATE CHAT', err)
         }
       },
+      deleteChat: async (root, { chatID }) => {
+        try {
+          const chat = await Chat.findByIdAndDelete(chatID)
+          console.log('CHAT deleted')
+          return chat
+        } catch (err) {
+          console.log('deleteChat ERROR', err)
+        }
+      },
       addMessage: async (root, { message, author, chatID }) => {
         const newMessage = { message, author, chatID }
         try {
@@ -95,10 +105,9 @@ const Chat = require('./models/chat.js')
           await chat.save()
           //subscription, adding whole chat right now but probably should just add new message
           pubsub.publish('MESSAGE_ADDED', { messageAdded: newMessage })
-
-          return chat
+          return chat.messages[chat.messages.length - 1]
         } catch (err) {
-          console.log('CREATE CHAT', err)
+          console.log('addMessage from DB', err)
         }
       },
     },
