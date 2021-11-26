@@ -6,6 +6,7 @@ const { PubSub, withFilter } = require('graphql-subscriptions')
 const { SubscriptionServer } = require('subscriptions-transport-ws')
 const { makeExecutableSchema } = require('@graphql-tools/schema')
 const mongoose = require('mongoose')
+const cors = require('cors')
 require('dotenv').config()
 
 const pubsub = new PubSub()
@@ -41,6 +42,8 @@ const Chat = require('./models/chat.js')
     .catch((error) => {
       console.log('error connection to MongoDB:', error.message)
     })
+
+  app.use(cors())
 
   // Schema definition
   const typeDefs = gql`
