@@ -126,6 +126,7 @@ const Chat = require('./models/chat.js')
   const schema = makeExecutableSchema({ typeDefs, resolvers })
 
   const server = new ApolloServer({
+    cors: true,
     schema,
     plugins: [
       {
