@@ -127,6 +127,7 @@ const Chat = require('./models/chat.js')
 
   const server = new ApolloServer({
     cors: true,
+    introspection: true,
     schema,
     plugins: [
       {
