@@ -44,6 +44,7 @@ const Chat = require('./models/chat.js')
     })
 
   app.use(cors())
+  app.use(express.static('build'))
 
   // Schema definition
   const typeDefs = gql`
@@ -106,9 +107,10 @@ const Chat = require('./models/chat.js')
           const chat = await Chat.findById(chatID)
           chat.messages.push(newMessage)
           await chat.save()
+          const returnMessage = chat.messages[chat.messages.length - 1]
           //subscription, adding whole chat right now but probably should just add new message
-          pubsub.publish('MESSAGE_ADDED', { messageAdded: newMessage })
-          return chat.messages[chat.messages.length - 1]
+          pubsub.publish('MESSAGE_ADDED', { messageAdded: returnMessage })
+          return returnMessage
         } catch (err) {
           console.log('addMessage from DB', err)
         }
